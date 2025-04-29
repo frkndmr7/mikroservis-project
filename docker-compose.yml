@@ -1,0 +1,19 @@
+version: '3'
+services:
+  dortislem:
+    build: ./dortislem
+    ports:
+      - "3001:3001"
+  
+  istatistik:
+    build: ./istatistik
+    ports:
+      - "3002:3002"
+  
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - dortislem
+      - istatistik
