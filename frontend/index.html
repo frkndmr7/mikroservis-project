@@ -80,6 +80,30 @@
                 </div>
             </div>
         </div>
+        <div class="card">
+            <h2>Birim Dönüşüm Servisi</h2>
+            <div>
+                <input type="number" id="conversionValue" placeholder="Dönüştürülecek değer">
+                <select id="category">
+                    <option value="">Kategori Seçin</option>
+                    <option value="uzunluk">Uzunluk</option>
+                    <option value="agirlik">Ağırlık</option>
+                    <option value="hacim">Hacim</option>
+                    <option value="sicaklik">Sıcaklık</option>
+                    <option value="alan">Alan</option>
+                    <option value="zaman">Zaman</option>
+                </select>
+                <select id="sourceUnit">
+                    <option value="">Birim Seçin</option>
+                </select>
+                <select id="targetUnit">
+                    <option value="">Birim Seçin</option>
+                </select>
+                <div>
+                    <button onclick="birimDonustur()">Dönüştür</button>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div id="result">
@@ -91,6 +115,33 @@
         // Servis adreslerini tanımla
         const MATH_SERVICE = 'http://localhost:3001';
         const STAT_SERVICE = 'http://localhost:3002';
+        const UNIT_SERVICE = 'http://localhost:3003';
+
+
+        document.getElementById('category').addEventListener('change', async function() {
+            const category = this.value;
+            if (!category) return;
+    
+            try {
+                const response = await fetch(`${UNIT_SERVICE}/units/${category}`);
+                const data = await response.json();
+        
+                const sourceSelect = document.getElementById('sourceUnit');
+                const targetSelect = document.getElementById('targetUnit');
+        
+        // Birimleri temizle
+                sourceSelect.innerHTML = '<option value="">Birim Seçin</option>';
+                targetSelect.innerHTML = '<option value="">Birim Seçin</option>';
+        
+        // Yeni birimleri ekle
+                data.birimler.forEach(unit => {
+                    sourceSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+                    targetSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+                });
+            }  catch (error) {
+                setResult(`Birimler yüklenirken hata: ${error.message}`);
+            }
+        });
         
         // Matematik servisi için fonksiyon
         async function islemYap(islem) {
@@ -146,6 +197,42 @@
                     setResult(`Hata: ${data.hata}`);
                 } else {
                     setResult(`${capitalizeFirstLetter(islem)} (${numbersArray.join(', ')}) = ${data.sonuc}`);
+                }
+            } catch (error) {
+                setResult(`Bağlantı hatası: ${error.message}`);
+            }
+        }
+
+        async function birimDonustur() {
+            const deger = parseFloat(document.getElementById('conversionValue').value);
+            const kategori = document.getElementById('category').value;
+            const kaynakBirim = document.getElementById('sourceUnit').value;
+            const hedefBirim = document.getElementById('targetUnit').value;
+    
+            if (isNaN(deger) || !kategori || !kaynakBirim || !hedefBirim) {
+                setResult('Lütfen tüm alanları doldurun');
+                return;
+            }
+    
+            try {
+                const response = await fetch(`${UNIT_SERVICE}/convert`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        deger, 
+                        kategori, 
+                        kaynakBirim, 
+                        hedefBirim 
+                    }),
+                });
+                
+                const data = await response.json();
+                if (data.hata) {
+                    setResult(`Hata: ${data.hata}`);
+                } else {
+                    setResult(data.bilgi);
                 }
             } catch (error) {
                 setResult(`Bağlantı hatası: ${error.message}`);

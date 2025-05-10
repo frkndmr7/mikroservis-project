@@ -10,6 +10,11 @@ services:
     ports:
       - "3002:3002"
   
+  birimdonusum:
+    build: ./birimdonusum
+    ports:
+      - "3003:3003"
+  
   frontend:
     build: ./frontend
     ports:
@@ -17,3 +22,4 @@ services:
     depends_on:
       - dortislem
       - istatistik
+      - birimdonusum
