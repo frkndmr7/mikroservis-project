@@ -112,10 +112,16 @@
     </div>
 
     <script>
+
+        //const MINIKUBE_IP = "192.168.49.2";
         // Servis adreslerini tanımla
-        const MATH_SERVICE = 'http://localhost:3001';
-        const STAT_SERVICE = 'http://localhost:3002';
-        const UNIT_SERVICE = 'http://localhost:3003';
+        const MATH_SERVICE = 'http://localhost:8081';
+        const STAT_SERVICE = 'http://localhost:8082';
+        const UNIT_SERVICE = 'http://localhost:8083';
+
+        //const MATH_SERVICE = `http://${MINIKUBE_IP}:31644`;
+        //const STAT_SERVICE = `http://${MINIKUBE_IP}:30558`;
+        //const UNIT_SERVICE = `http://${MINIKUBE_IP}:30869`;
 
 
         document.getElementById('category').addEventListener('change', async function() {

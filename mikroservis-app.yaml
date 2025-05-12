@@ -1,0 +1,135 @@
+# mikroservis-app.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dortislem
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dortislem
+  template:
+    metadata:
+      labels:
+        app: dortislem
+    spec:
+      containers:
+      - name: dortislem
+        image: dortislem:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dortislem
+spec:
+  selector:
+    app: dortislem
+  ports:
+  - port: 3001
+    targetPort: 3001
+    nodePort: 31644
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: istatistik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: istatistik
+  template:
+    metadata:
+      labels:
+        app: istatistik
+    spec:
+      containers:
+      - name: istatistik
+        image: istatistik:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: istatistik
+spec:
+  selector:
+    app: istatistik
+  ports:
+  - port: 3002
+    targetPort: 3002
+    nodePort: 30558
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: birimdonusum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: birimdonusum
+  template:
+    metadata:
+      labels:
+        app: birimdonusum
+    spec:
+      containers:
+      - name: birimdonusum
+        image: birimdonusum:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: birimdonusum
+spec:
+  selector:
+    app: birimdonusum
+  ports:
+  - port: 3003
+    targetPort: 3003
+    nodePort: 30869
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: frontend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+  type: NodePort
