@@ -40,3 +40,17 @@ Thumbs.db
 ERROR
 transferring
 *~
+# Ansible
+ansible/*.retry
+ansible/__pycache__/
+
+# Kubernetes
+*.log
+kubernetes-tools/pid/
+
+# IDE ve geçici dosyalar
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store

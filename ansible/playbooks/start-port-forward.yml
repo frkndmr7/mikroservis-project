@@ -1,0 +1,33 @@
+---
+- name: Uygulamayı Port-Forward ile Başlat
+  hosts: localhost
+  connection: local
+  become: no
+  vars:
+    project_dir: "{{ lookup('env', 'HOME') }}/microservices"
+  tasks:
+    - name: port-forward.sh dosyasının varlığını kontrol et
+      stat:
+        path: "{{ project_dir }}/port-forward.sh"
+      register: port_forward_stat
+      
+    - name: Dosya durum bilgisi
+      debug:
+        var: port_forward_stat
+        
+    - name: Hata göster - port-forward.sh bulunamadı
+      fail:
+        msg: "{{ project_dir }}/port-forward.sh dosyası bulunamadı! Lütfen deploy-port-forward.yml playbook'unu çalıştırarak betik dosyalarını oluşturun."
+      when: not port_forward_stat.stat.exists
+      
+    - name: Port-forward işlemini başlat
+      shell: cd {{ project_dir }} && ./port-forward.sh
+      
+    - name: Port-forward durumunu kontrol et
+      shell: ps aux | grep port-forward | grep -v grep
+      register: forward_status
+      ignore_errors: yes
+      
+    - name: Port-forward durumunu yazdır
+      debug:
+        var: forward_status.stdout_lines

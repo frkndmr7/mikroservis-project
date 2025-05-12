@@ -1,0 +1,34 @@
+#!/bin/bash
+# port-forward.sh.j2 - Kubernetes servislerini belirtilen lokal portlara yönlendirir
+
+# PID dosyası dizini oluştur
+mkdir -p {{ project_dir }}/pid
+
+# Önceki port-forward işlemlerini temizle (ihtiyaç halinde)
+if [ -f "{{ project_dir }}/pid/port-forward.pid" ]; then
+    echo "Önceki port-forward işlemleri temizleniyor..."
+    ./stop-port-forward.sh
+fi
+
+echo "Port-forward işlemleri başlatılıyor..."
+
+{% for service in port_forwards %}
+# {{ service.name }} servisi için port-forward
+POD_NAME=$(kubectl get pod -l app={{ service.name }} -o jsonpath="{.items[0].metadata.name}")
+if [ -n "$POD_NAME" ]; then
+    echo "{{ service.name }} servisi için port-forward başlatılıyor: localhost:{{ service.local_port }} -> $POD_NAME:{{ service.pod_port }}"
+    kubectl port-forward $POD_NAME {{ service.local_port }}:{{ service.pod_port }} > "{{ project_dir }}/{{ service.name }}-forward.log" 2>&1 &
+    echo $! > "{{ project_dir }}/pid/{{ service.name }}-forward.pid"
+else
+    echo "HATA: {{ service.name }} servisi bulunamadı!"
+fi
+{% endfor %}
+
+echo "Tüm port-forward işlemleri başlatıldı."
+echo "Frontend için: http://localhost:80 adresini kullanabilirsiniz."
+echo "API'ler şu adreslerde erişilebilir:"
+{% for service in port_forwards %}
+echo "- {{ service.name }}: http://localhost:{{ service.local_port }}"
+{% endfor %}
+echo ""
+echo "Port-forward işlemlerini durdurmak için './stop-port-forward.sh' komutunu çalıştırın."

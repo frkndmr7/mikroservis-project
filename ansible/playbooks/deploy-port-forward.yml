@@ -1,0 +1,92 @@
+---
+- name: Uygulama Dağıtımı ve Port-Forward Ayarları
+  hosts: localhost
+  connection: local
+  become: no
+  vars:
+    project_dir: "{{ lookup('env', 'HOME') }}/microservices"  # Kullanıcı dizininde bir klasör
+    # Port-forward için yerel portlar
+    local_dortislem_port: 8081
+    local_istatistik_port: 8082
+    local_birimdonusum_port: 8083
+    source_dir: "/mnt/c/Users/Hp/Microservice Project/Hesaplama"
+  tasks:
+    - name: Proje klasörünü oluştur
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Proje dosyalarını kopyala
+      copy:
+        src: "{{ source_dir }}/{{ item }}"
+        dest: "{{ project_dir }}/"
+      with_items:
+        - dortislem
+        - istatistik
+        - birimdonusum
+        - frontend
+        - docker-compose.yml
+        - mikroservis-app.yaml
+      ignore_errors: yes
+      
+    - name: Docker imajlarını oluştur
+      shell: docker-compose build
+      args:
+        chdir: "{{ project_dir }}"
+      
+    - name: Kubernetes'e uygulamayı dağıt
+      shell: kubectl apply -f mikroservis-app.yaml --validate=false
+      args:
+        chdir: "{{ project_dir }}"
+      
+    - name: Deploymentların hazır olmasını bekle
+      shell: kubectl rollout status deployment/{{ item }}
+      args:
+        chdir: "{{ project_dir }}"
+      with_items:
+        - dortislem
+        - istatistik
+        - birimdonusum
+        - frontend
+      ignore_errors: yes
+      
+    - name: Uygulamanın durumunu kontrol et
+      shell: kubectl get pods
+      register: pod_status
+      
+    - name: Pod durumunu yazdır
+      debug:
+        var: pod_status.stdout_lines
+        
+    - name: Servisleri kontrol et
+      shell: kubectl get services
+      register: services
+      
+    - name: Servis durumlarını yazdır
+      debug:
+        var: services.stdout_lines
+
+    # Port-forward yönetimi için playbook eklentileri
+    - name: Port-forward betik dosyaları oluştur
+      template:
+        src: port-forward.sh.j2
+        dest: "{{ project_dir }}/port-forward.sh"
+        mode: '0755'
+      vars:
+        port_forwards:
+          - name: dortislem
+            local_port: "{{ local_dortislem_port }}"
+            pod_port: 3001
+          - name: istatistik
+            local_port: "{{ local_istatistik_port }}"
+            pod_port: 3002
+          - name: birimdonusum
+            local_port: "{{ local_birimdonusum_port }}"
+            pod_port: 3003
+
+    - name: Port-forward durdurma betiği oluştur
+      template:
+        src: stop-port-forward.sh.j2
+        dest: "{{ project_dir }}/stop-port-forward.sh"
+        mode: '0755'

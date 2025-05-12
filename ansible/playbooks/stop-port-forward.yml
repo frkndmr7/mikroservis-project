@@ -1,0 +1,22 @@
+---
+- name: Uygulamanın Port-Forward İşlemini Durdur
+  hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    project_dir: "/opt/microservices"
+  tasks:
+    - name: Port-forward işlemini durdur
+      shell: ./stop-port-forward.sh
+      args:
+        chdir: "{{ project_dir }}"
+      
+    - name: Port-forward durumunu kontrol et
+      shell: ps aux | grep port-forward | grep -v grep
+      register: forward_status
+      ignore_errors: yes
+      
+    - name: Port-forward durumunu yazdır
+      debug:
+        msg: "Tüm port-forward işlemleri durduruldu. Aktif port-forward işlemi kalmadı."
+      when: forward_status.rc != 0
